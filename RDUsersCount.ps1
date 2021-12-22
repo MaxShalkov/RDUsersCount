@@ -1,31 +1,30 @@
-param ($server, $Type)
-    
-[Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("cp866")
+param ($server,$type) 
 
-$query = (quser /server:$server | Out-String)
+$In = (Get-Content $PSScriptRoot\operational_data.json | ConvertFrom-Json)
 
-$Out = $query -split "`r" | Select-Object -Skip 1 | ForEach-Object {
-    if ($_ -match  '(?''UserName''[^\>\s]+)\s+(?''SessionName''\S+)?\s+(?''ID''\d+)\s+(?''State''\w+)\s+(?''idle''\d+|\.)'){
-      [pscustomobject]@{
-         UserName = $Matches['UserName']
-         ID = $Matches['ID']
-         State = $Matches['State']
-         SessionName = $Matches['SessionName']
-         Idle = $Matches['Idle']
-      }
-   }
+if ($server -eq 'All') {
+    $In = $In.sessions
+} elseif ($server -notin $In.server) {
+    return 0
+} else {
+    $In = ($In | Where-Object {$_.Server -eq $server}).sessions
 }
 
 switch ($Type) {
-    "Active" {
-        return ($Out | Where-Object {$_.State -match 'Active|Активно'}).username.count
-        
+
+    "A" {
+        return @($In | Where-Object {($_.State -match 'Active|Активно') -and ($_.Idle -eq ".")}).count
     }
-    "Disconnect" {
-        return ($Out | Where-Object {$_.State -match 'Disc|Диск'}).username.count
-        
+
+    "D" {
+        return @($In | Where-Object {$_.State -match 'Disc|Диск'}).count
     }
+
+    "I" {
+        return @($In | Where-Object {($_.Idle -ne '.') -and ($_.State -notmatch 'Disc|Диск')}).count
+    }
+
     default {
-        return $Out.username.count
+        return @($In).count
     }
 }
