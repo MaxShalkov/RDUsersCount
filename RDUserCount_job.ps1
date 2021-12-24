@@ -1,8 +1,6 @@
-[Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("cp866")
-
 $Result = @()
 
-$Servers = (Get-ADGroupMember RDSH).name -Match "RDS\d+$" | ForEach-Object {$_ + ".DOMAIN.local"}
+$Servers = (Get-ADGroupMember RDSH).name -Match "RDS\d+$" | ForEach-Object {$_ + ".$($env:USERDNSDOMAIN)"}
 
 foreach ($s in $Servers) {
     if (-not (Test-Connection $s -Quiet -Count 1 -ErrorAction SilentlyContinue)) {continue} else {
