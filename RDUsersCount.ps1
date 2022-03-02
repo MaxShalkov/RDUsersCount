@@ -11,8 +11,8 @@ if ($server -eq 'all') {
 }
 
 foreach ($tmp in $In) {
-    if (($tmp.idle -eq '24692') -or ($tmp.idle -le 3)) {
-        $tmp.idle = '.'
+    if (($tmp.idle -eq '24692') -or ($tmp.idle -in 4..150)) {
+        $tmp.idle = '.' 
     }
 }
 
